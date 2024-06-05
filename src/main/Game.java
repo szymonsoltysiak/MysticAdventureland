@@ -1,9 +1,9 @@
 package main;
 
+import java.awt.Graphics;
+
 import entities.Player;
 import levels.LevelManager;
-
-import java.awt.*;
 
 public class Game implements Runnable {
 
@@ -11,7 +11,7 @@ public class Game implements Runnable {
 	private GamePanel gamePanel;
 	private Thread gameThread;
 	private final int FPS_SET = 120;
-	private final int UPS_SET=200;
+	private final int UPS_SET = 200;
 	private Player player;
 	private LevelManager levelManager;
 
@@ -34,8 +34,10 @@ public class Game implements Runnable {
 	}
 
 	private void initClasses() {
-		player = new Player(200, 200);
 		levelManager = new LevelManager(this);
+		player = new Player(200, 200, (int) (64 * SCALE), (int) (40 * SCALE));
+		player.loadLvlData(levelManager.getCurrentLevel().getLevelData());
+
 	}
 
 	private void startGameLoop() {
@@ -43,9 +45,9 @@ public class Game implements Runnable {
 		gameThread.start();
 	}
 
-	public void update(){
-		player.update();
+	public void update() {
 		levelManager.update();
+		player.update();
 	}
 
 	public void render(Graphics g) {
@@ -55,8 +57,10 @@ public class Game implements Runnable {
 
 	@Override
 	public void run() {
+
 		double timePerFrame = 1000000000.0 / FPS_SET;
 		double timePerUpdate = 1000000000.0 / UPS_SET;
+
 		long previousTime = System.nanoTime();
 
 		int frames = 0;
@@ -71,15 +75,15 @@ public class Game implements Runnable {
 
 			deltaU += (currentTime - previousTime) / timePerUpdate;
 			deltaF += (currentTime - previousTime) / timePerFrame;
-
 			previousTime = currentTime;
-			if(deltaU >= 1) {
+
+			if (deltaU >= 1) {
 				update();
 				updates++;
 				deltaU--;
 			}
 
-			if(deltaF >= 1) {
+			if (deltaF >= 1) {
 				gamePanel.repaint();
 				frames++;
 				deltaF--;
@@ -87,20 +91,21 @@ public class Game implements Runnable {
 
 			if (System.currentTimeMillis() - lastCheck >= 1000) {
 				lastCheck = System.currentTimeMillis();
-				System.out.println("FPS: " + frames+" | UPS: "+updates);
+				System.out.println("FPS: " + frames + " | UPS: " + updates);
 				frames = 0;
 				updates = 0;
+
 			}
 		}
 
 	}
 
-	public Player getPlayer() {
-		return player;
+	public void windowFocusLost() {
+		player.resetDirBooleans();
 	}
 
-	public void windowsFocusLost(){
-		player.resetDirBooleans();
+	public Player getPlayer() {
+		return player;
 	}
 
 }
