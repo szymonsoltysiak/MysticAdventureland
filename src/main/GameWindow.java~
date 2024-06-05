@@ -22,7 +22,7 @@ public class GameWindow {
 
 			}
 			public void windowLostFocus(WindowEvent e) {
-				gamePanel.getGame().windowsFocusLost();
+				gamePanel.getGame().w
 			}
 		});
 
