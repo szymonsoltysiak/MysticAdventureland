@@ -3,18 +3,23 @@ package gamestates;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Random;
 
+import entities.EnemyManager;
 import entities.Player;
 import levels.LevelManager;
 import main.Game;
+import ui.GameOverOverlay;
 import utilz.LoadSave;
 import static utilz.Constants.Environment.*;
 
 public class Playing extends State implements Statemethods {
     private Player player;
     private LevelManager levelManager;
+    private EnemyManager enemyManager;
+    private GameOverOverlay gameOverOverlay;
 
     private int xLvlOffset;
     private int leftBorder = (int) (0.2 * Game.GAME_WIDTH);
@@ -26,6 +31,8 @@ public class Playing extends State implements Statemethods {
     private BufferedImage backgroundImage, bigCloud, smallCloud;
     private int[] smallCloudsPos;
     private Random rnd = new Random();
+
+    private boolean gameOver;
 
     public Playing(Game game) {
         super(game);
@@ -41,16 +48,20 @@ public class Playing extends State implements Statemethods {
 
     private void initClasses() {
         levelManager = new LevelManager(game);
-        player = new Player(200, 200, (int) (64 * Game.SCALE), (int) (40 * Game.SCALE));
+        enemyManager = new EnemyManager(this);
+        player = new Player(200, 200, (int) (64 * Game.SCALE), (int) (40 * Game.SCALE), this);
         player.loadLvlData(levelManager.getCurrentLevel().getLevelData());
-
+        gameOverOverlay = new GameOverOverlay(this);
     }
 
     @Override
     public void update() {
-        levelManager.update();
-        player.update();
-        checkCloseToBoarder();
+        if(!gameOver) {
+            levelManager.update();
+            player.update();
+            enemyManager.update(levelManager.getCurrentLevel().getLevelData(), player);
+            checkCloseToBoarder();
+        }
     }
 
     private void checkCloseToBoarder() {
@@ -74,7 +85,9 @@ public class Playing extends State implements Statemethods {
         drawClouds(g);
         levelManager.draw(g, xLvlOffset);
         player.render(g, xLvlOffset);
-
+        enemyManager.draw(g, xLvlOffset);
+        if(gameOver)
+            gameOverOverlay.draw(g);
     }
 
     private void drawClouds(Graphics g) {
@@ -85,15 +98,33 @@ public class Playing extends State implements Statemethods {
             g.drawImage(smallCloud, SMALL_CLOUD_WIDTH*4*i - (int)(xLvlOffset*0.7), smallCloudsPos[i], SMALL_CLOUD_WIDTH, SMALL_CLOUD_HEIGHT, null);
     }
 
+    public void resetAll() {
+       gameOver = false;
+       player.resetAll();
+       enemyManager.resetAllEnemies();
+    }
+
+    public void setGameOver(boolean gameOver){
+        this.gameOver = gameOver;
+    }
+
+    public void checkEnemyHit(Rectangle2D.Float attackBox){
+        enemyManager.checkEnemyHit(attackBox);
+    }
+
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1)
-            player.setAttacking(true);
+        if(!gameOver)
+            if (e.getButton() == MouseEvent.BUTTON1)
+                player.setAttacking(true);
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        switch (e.getKeyCode()) {
+        if(gameOver)
+            gameOverOverlay.keyPressed(e);
+        else
+         switch (e.getKeyCode()) {
             case KeyEvent.VK_A:
                 player.setLeft(true);
                 break;
@@ -111,18 +142,18 @@ public class Playing extends State implements Statemethods {
 
     @Override
     public void keyReleased(KeyEvent e) {
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_A:
-                player.setLeft(false);
-                break;
-            case KeyEvent.VK_D:
-                player.setRight(false);
-                break;
-            case KeyEvent.VK_SPACE:
-                player.setJump(false);
-                break;
-        }
-
+        if(!gameOver)
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_A:
+                    player.setLeft(false);
+                    break;
+                case KeyEvent.VK_D:
+                    player.setRight(false);
+                    break;
+                case KeyEvent.VK_SPACE:
+                    player.setJump(false);
+                    break;
+            }
     }
 
     @Override
