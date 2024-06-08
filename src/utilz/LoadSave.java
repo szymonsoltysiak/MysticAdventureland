@@ -1,68 +1,71 @@
 package utilz;
 
-import main.Game;
-
-import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Arrays;
 
-
-import entities.Crabby;
-import static utilz.Constants.EnemyConstants.CRABBY;
+import javax.imageio.ImageIO;
 
 public class LoadSave {
-    public static final String PLAYER_ATLAS = "player_sprites.png";
-    public static final String LEVEL_ATLAS = "outside_sprites.png";
-    //public static final String LEVEL_ONE_DATA = "level_one_data.png";
-    public static final String LEVEL_ONE_DATA = "level_one_data_long.png";
-    public static final String MENU_BUTTONS = "button_atlas.png";
-    public static final String MENU_BACKGROUND = "menu_background.png";
-    public static final String MENU_BACKGROUND_IMG = "background_menu.png";
-    public static final String PLAYING_BG_IMG = "playing_bg_img.png";
-    public static final String BIG_CLOUDS = "big_clouds.png";
-    public static final String SMALL_CLOUDS = "small_clouds.png";
-    public static final String CRABBY_SPRITE = "crabby_sprite.png";
-    public static final String STATUS_BAR = "health_power_bar.png";
 
-    public static BufferedImage GetSpriteAtlas(String fileName){
-        BufferedImage img = null;
-        try {
-            img = ImageIO.read(new FileInputStream("res/"+fileName));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return img;
-    }
+	public static final String PLAYER_ATLAS = "player_sprites.png";
+	public static final String LEVEL_ATLAS = "outside_sprites.png";
+	public static final String MENU_BUTTONS = "button_atlas.png";
+	public static final String MENU_BACKGROUND = "menu_background.png";
+	public static final String PAUSE_BACKGROUND = "pause_menu.png";
+	public static final String SOUND_BUTTONS = "sound_button.png";
+	public static final String URM_BUTTONS = "urm_buttons.png";
+	public static final String VOLUME_BUTTONS = "volume_buttons.png";
+	public static final String MENU_BACKGROUND_IMG = "background_menu.png";
+	public static final String PLAYING_BG_IMG = "playing_bg_img.png";
+	public static final String BIG_CLOUDS = "big_clouds.png";
+	public static final String SMALL_CLOUDS = "small_clouds.png";
+	public static final String CRABBY_SPRITE = "crabby_sprite.png";
+	public static final String STATUS_BAR = "health_power_bar.png";
+	public static final String COMPLETED_IMG = "completed_sprite.png";
 
-    public static ArrayList<Crabby> GetCrabs() {
-        BufferedImage img = GetSpriteAtlas(LEVEL_ONE_DATA);
-        ArrayList<Crabby> list = new ArrayList<>();
-        for (int j = 0; j < img.getHeight(); j++)
-            for (int i = 0; i < img.getWidth(); i++) {
-                Color color = new Color(img.getRGB(i, j));
-                int value = color.getGreen();
-                if (value == CRABBY)
-                    list.add(new Crabby(i * Game.TILES_SIZE, j * Game.TILES_SIZE));
-            }
-        return list;
-    }
+	public static BufferedImage GetSpriteAtlas(String fileName){
+		BufferedImage img = null;
+		try {
+			img = ImageIO.read(new FileInputStream("res/"+fileName));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return img;
+	}
 
-    public static int[][] GetLevelData(){
-        BufferedImage img = GetSpriteAtlas(LEVEL_ONE_DATA);
-        int[][] lvlData = new int[img.getHeight()][img.getWidth()];
 
-        for(int j=0; j<img.getHeight(); j++){
-            for(int i=0; i<img.getWidth(); i++){
-                Color color = new Color(img.getRGB(i, j));
-                int value = color.getRed();
-                if(value>=48)
-                    value = 0;
-                lvlData[j][i] = value;
-            }
-        }
-        return lvlData;
-    }
+	public static BufferedImage[] GetAllLevels() {
+		File dir = new File("res/lvls");
+		File[] files = dir.listFiles((d, name) -> name.endsWith(".png"));
+
+		if (files == null) {
+			throw new RuntimeException("Directory not found or I/O error: " + dir.getAbsolutePath());
+		}
+
+		// Sort files numerically based on file name (e.g., "1.png", "2.png", ...)
+		Arrays.sort(files, (f1, f2) -> {
+			int num1 = Integer.parseInt(f1.getName().replace(".png", ""));
+			int num2 = Integer.parseInt(f2.getName().replace(".png", ""));
+			return Integer.compare(num1, num2);
+		});
+
+		BufferedImage[] imgs = new BufferedImage[files.length];
+		for (int i = 0; i < files.length; i++) {
+			try {
+				imgs[i] = ImageIO.read(files[i]);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return imgs;
+	}
+
+
 }
