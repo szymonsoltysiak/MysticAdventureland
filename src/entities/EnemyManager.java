@@ -10,8 +10,8 @@ import levels.Level;
 import utilz.LoadSave;
 import static utilz.Constants.EnemyConstants.*;
 
-public class EnemyManager {
-
+public class EnemyManager implements Runnable{
+	private boolean running;
 	private Playing playing;
 	private BufferedImage[][] crabbyArr;
 	private ArrayList<Crabby> crabbies = new ArrayList<>();
@@ -20,6 +20,29 @@ public class EnemyManager {
 		this.playing = playing;
 		loadEnemyImgs();
 	}
+
+	public void start() {
+		running = true;
+		new Thread(this).start();
+	}
+
+	@Override
+	public void run() {
+		while (running) {
+			update(playing.getLevelManager().getCurrentLevel().getLevelData(), playing.getPlayer());
+			// Add sleep or wait logic to control the update rate
+			try {
+				Thread.sleep(16); // Approximately 60 updates per second
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}
+	}
+
+	public void stop() {
+		running = false;
+	}
+
 
 	public void loadEnemies(Level level) {
 		crabbies = level.getCrabs();

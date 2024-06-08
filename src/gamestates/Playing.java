@@ -7,6 +7,9 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import entities.EnemyManager;
 import entities.Player;
@@ -42,6 +45,11 @@ public class Playing extends State implements Statemethods {
 	private boolean lvlCompleted;
 	private boolean playerDying;
 
+	private ExecutorService executorService;
+	private Future<?> playerFuture;
+	private Future<?> enemyManagerFuture;
+	private Future<?> objectManagerFuture;
+
 	public Playing(Game game) {
 		super(game);
 		initClasses();
@@ -55,6 +63,8 @@ public class Playing extends State implements Statemethods {
 
 		calcLvlOffset();
 		loadStartLevel();
+
+		executorService = Executors.newFixedThreadPool(3);
 	}
 
 	public void loadNextLevel() {
@@ -98,10 +108,19 @@ public class Playing extends State implements Statemethods {
 			player.update();
 		} else {
 			levelManager.update();
-			objectManager.update(levelManager.getCurrentLevel().getLevelData(), player);
-			player.update();
-			enemyManager.update(levelManager.getCurrentLevel().getLevelData(), player);
 			checkCloseToBorder();
+
+			if (playerFuture == null || playerFuture.isDone()) {
+				playerFuture = executorService.submit(player::update);
+			}
+
+			if (enemyManagerFuture == null || enemyManagerFuture.isDone()) {
+				enemyManagerFuture = executorService.submit(() -> enemyManager.update(levelManager.getCurrentLevel().getLevelData(), player));
+			}
+
+			if (objectManagerFuture == null || objectManagerFuture.isDone()) {
+				objectManagerFuture = executorService.submit(() -> objectManager.update(levelManager.getCurrentLevel().getLevelData(), player));
+			}
 		}
 	}
 
@@ -123,9 +142,7 @@ public class Playing extends State implements Statemethods {
 	@Override
 	public void draw(Graphics g) {
 		g.drawImage(backgroundImg, 0, 0, Game.GAME_WIDTH, Game.GAME_HEIGHT, null);
-
 		drawClouds(g);
-
 		levelManager.draw(g, xLvlOffset);
 		player.render(g, xLvlOffset);
 		enemyManager.draw(g, xLvlOffset);
@@ -135,10 +152,11 @@ public class Playing extends State implements Statemethods {
 			g.setColor(new Color(0, 0, 0, 150));
 			g.fillRect(0, 0, Game.GAME_WIDTH, Game.GAME_HEIGHT);
 			pauseOverlay.draw(g);
-		} else if (gameOver)
+		} else if (gameOver) {
 			gameOverOverlay.draw(g);
-		else if (lvlCompleted)
+		} else if (lvlCompleted) {
 			levelCompletedOverlay.draw(g);
+		}
 	}
 
 	private void drawClouds(Graphics g) {
@@ -181,53 +199,56 @@ public class Playing extends State implements Statemethods {
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		if (!gameOver)
+		if (!gameOver) {
 			if (e.getButton() == MouseEvent.BUTTON1)
 				player.setAttacking(true);
+		}
 	}
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-		if (gameOver)
+		if (gameOver) {
 			gameOverOverlay.keyPressed(e);
-		else
+		} else {
 			switch (e.getKeyCode()) {
-			case KeyEvent.VK_A:
-				player.setLeft(true);
-				break;
-			case KeyEvent.VK_D:
-				player.setRight(true);
-				break;
-			case KeyEvent.VK_SPACE:
-				player.setJump(true);
-				break;
-			case KeyEvent.VK_ESCAPE:
-				paused = !paused;
-				break;
+				case KeyEvent.VK_A:
+					player.setLeft(true);
+					break;
+				case KeyEvent.VK_D:
+					player.setRight(true);
+					break;
+				case KeyEvent.VK_SPACE:
+					player.setJump(true);
+					break;
+				case KeyEvent.VK_ESCAPE:
+					paused = !paused;
+					break;
 			}
+		}
 	}
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		if (!gameOver)
+		if (!gameOver) {
 			switch (e.getKeyCode()) {
-			case KeyEvent.VK_A:
-				player.setLeft(false);
-				break;
-			case KeyEvent.VK_D:
-				player.setRight(false);
-				break;
-			case KeyEvent.VK_SPACE:
-				player.setJump(false);
-				break;
+				case KeyEvent.VK_A:
+					player.setLeft(false);
+					break;
+				case KeyEvent.VK_D:
+					player.setRight(false);
+					break;
+				case KeyEvent.VK_SPACE:
+					player.setJump(false);
+					break;
 			}
-
+		}
 	}
 
 	public void mouseDragged(MouseEvent e) {
-		if (!gameOver)
+		if (!gameOver) {
 			if (paused)
 				pauseOverlay.mouseDragged(e);
+		}
 	}
 
 	@Override
@@ -237,9 +258,9 @@ public class Playing extends State implements Statemethods {
 				pauseOverlay.mousePressed(e);
 			else if (lvlCompleted)
 				levelCompletedOverlay.mousePressed(e);
-		} else
+		} else {
 			gameOverOverlay.mousePressed(e);
-
+		}
 	}
 
 	@Override
@@ -249,8 +270,9 @@ public class Playing extends State implements Statemethods {
 				pauseOverlay.mouseReleased(e);
 			else if (lvlCompleted)
 				levelCompletedOverlay.mouseReleased(e);
-		} else
+		} else {
 			gameOverOverlay.mouseReleased(e);
+		}
 	}
 
 	@Override
@@ -260,8 +282,9 @@ public class Playing extends State implements Statemethods {
 				pauseOverlay.mouseMoved(e);
 			else if (lvlCompleted)
 				levelCompletedOverlay.mouseMoved(e);
-		} else
+		} else {
 			gameOverOverlay.mouseMoved(e);
+		}
 	}
 
 	public void setLevelCompleted(boolean levelCompleted) {
@@ -298,7 +321,5 @@ public class Playing extends State implements Statemethods {
 
 	public void setPlayerDying(boolean playerDying) {
 		this.playerDying = playerDying;
-
 	}
-
 }

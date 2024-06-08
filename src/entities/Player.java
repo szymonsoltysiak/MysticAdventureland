@@ -14,8 +14,8 @@ import gamestates.Playing;
 import main.Game;
 import utilz.LoadSave;
 
-public class Player extends Entity {
-
+public class Player extends Entity implements Runnable{
+	private boolean running;
 	private BufferedImage[][] animations;
 	private boolean moving = false, attacking = false;
 	private boolean left, right, jump;
@@ -59,6 +59,28 @@ public class Player extends Entity {
 		loadAnimations();
 		initHitbox(20, 27);
 		initAttackBox();
+	}
+
+	public void start() {
+		running = true;
+		new Thread(this).start();
+	}
+
+	@Override
+	public void run() {
+		while (running) {
+			update();
+			// Add sleep or wait logic to control the update rate
+			try {
+				Thread.sleep(16); // Approximately 60 updates per second
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}
+	}
+
+	public void stop() {
+		running = false;
 	}
 
 	public void setSpawn(Point spawn) {

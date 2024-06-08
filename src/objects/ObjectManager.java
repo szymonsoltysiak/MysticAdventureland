@@ -15,8 +15,8 @@ import static utilz.HelpMethods.CanCannonSeePlayer;
 import static utilz.HelpMethods.IsProjectileHittingLevel;
 import static utilz.Constants.Projectiles.*;
 
-public class ObjectManager {
-
+public class ObjectManager implements Runnable{
+	private boolean running;
 	private Playing playing;
 	private BufferedImage[][] potionImgs, containerImgs;
 	private BufferedImage[] cannonImgs;
@@ -31,6 +31,29 @@ public class ObjectManager {
 		this.playing = playing;
 		loadImgs();
 	}
+
+	public void start() {
+		running = true;
+		new Thread(this).start();
+	}
+
+	@Override
+	public void run() {
+		while (running) {
+			update(playing.getLevelManager().getCurrentLevel().getLevelData(), playing.getPlayer());
+			// Add sleep or wait logic to control the update rate
+			try {
+				Thread.sleep(16); // Approximately 60 updates per second
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}
+	}
+
+	public void stop() {
+		running = false;
+	}
+
 
 	public void checkSpikesTouched(Player p) {
 		for (Spike s : spikes)
