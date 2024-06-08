@@ -445,65 +445,31 @@ public class Player extends Entity implements Runnable {
 		right = false;
 	}
 
-	/**
-	 * Sets the attacking state of the player.
-	 *
-	 * @param attacking true to set the player as attacking, false otherwise.
-	 */
 	public void setAttacking(boolean attacking) {
 		this.attacking = attacking;
 	}
 
-	/**
-	 * Checks if the player is currently moving left.
-	 *
-	 * @return true if the player is moving left, false otherwise.
-	 */
 	public boolean isLeft() {
 		return left;
 	}
 
-	/**
-	 * Sets the left movement state of the player.
-	 *
-	 * @param left true to set the player as moving left, false otherwise.
-	 */
+
 	public void setLeft(boolean left) {
 		this.left = left;
 	}
 
-	/**
-	 * Checks if the player is currently moving right.
-	 *
-	 * @return true if the player is moving right, false otherwise.
-	 */
 	public boolean isRight() {
 		return right;
 	}
 
-	/**
-	 * Sets the right movement state of the player.
-	 *
-	 * @param right true to set the player as moving right, false otherwise.
-	 */
 	public void setRight(boolean right) {
 		this.right = right;
 	}
 
-	/**
-	 * Sets the jump state of the player.
-	 *
-	 * @param jump true to set the player as jumping, false otherwise.
-	 */
 	public void setJump(boolean jump) {
 		this.jump = jump;
 	}
 
-	/**
-	 * Resets all player attributes to their default values.
-	 * This includes resetting movement flags, health, position, and state.
-	 * Additionally, it checks if the player is initially in the air and updates the inAir flag accordingly.
-	 */
 	public void resetAll() {
 		resetDirBooleans();
 		inAir = false;
@@ -519,13 +485,7 @@ public class Player extends Entity implements Runnable {
 		}
 	}
 
-	/**
-	 * Retrieves the tile Y position of the player.
-	 *
-	 * @return The Y position of the player in terms of tiles.
-	 */
 	public int getTileY() {
 		return tileY;
 	}
-
 }

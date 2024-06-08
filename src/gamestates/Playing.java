@@ -22,6 +22,10 @@ import ui.PauseOverlay;
 import utilz.LoadSave;
 import static utilz.Constants.Environment.*;
 
+/**
+ * The playing state of the game.
+ * This state represents the main gameplay loop where the player controls the character.
+ */
 public class Playing extends State implements Statemethods {
 	private Player player;
 	private LevelManager levelManager;
@@ -50,6 +54,12 @@ public class Playing extends State implements Statemethods {
 	private Future<?> enemyManagerFuture;
 	private Future<?> objectManagerFuture;
 
+	/**
+	 * Constructor for the Playing state.
+	 * Initializes the necessary components for the gameplay.
+	 *
+	 * @param game The main Game instance.
+	 */
 	public Playing(Game game) {
 		super(game);
 		initClasses();
@@ -67,21 +77,40 @@ public class Playing extends State implements Statemethods {
 		executorService = Executors.newFixedThreadPool(3);
 	}
 
+	/**
+	 * Loads the next level.
+	 * Resets all game elements and loads the next level from the level manager.
+	 * Sets the player spawn point to the spawn point of the current level.
+	 */
 	public void loadNextLevel() {
 		resetAll();
 		levelManager.loadNextLevel();
 		player.setSpawn(levelManager.getCurrentLevel().getPlayerSpawn());
 	}
 
+	/**
+	 * Loads the start level.
+	 * Loads enemies and objects for the current level from the level manager.
+	 */
 	private void loadStartLevel() {
 		enemyManager.loadEnemies(levelManager.getCurrentLevel());
 		objectManager.loadObjects(levelManager.getCurrentLevel());
 	}
 
+	/**
+	 * Calculates the level offset.
+	 * Retrieves the level offset from the current level and sets it as the maximum level offset.
+	 */
 	private void calcLvlOffset() {
 		maxLvlOffsetX = levelManager.getCurrentLevel().getLvlOffset();
 	}
 
+	/**
+	 * Initializes game classes.
+	 * Creates instances of the level manager, enemy manager, and object manager.
+	 * Creates a player instance and initializes it with the current level data and spawn point.
+	 * Creates instances of the pause overlay, game over overlay, and level completed overlay.
+	 */
 	private void initClasses() {
 		levelManager = new LevelManager(game);
 		enemyManager = new EnemyManager(this);
@@ -96,6 +125,11 @@ public class Playing extends State implements Statemethods {
 		levelCompletedOverlay = new LevelCompletedOverlay(this);
 	}
 
+	/**
+	 * Updates the playing state.
+	 * Checks if the game is paused, if the level is completed, if the game is over, if the player is dying, or if the game is running normally.
+	 * Executes the appropriate update actions accordingly.
+	 */
 	@Override
 	public void update() {
 		if (paused) {
@@ -124,6 +158,10 @@ public class Playing extends State implements Statemethods {
 		}
 	}
 
+	/**
+	 * Checks if the player is close to the level borders and adjusts the level offset accordingly.
+	 * This method ensures that the player remains centered within the playable area.
+	 */
 	private void checkCloseToBorder() {
 		int playerX = (int) player.getHitbox().x;
 		int diff = playerX - xLvlOffset;
@@ -139,6 +177,13 @@ public class Playing extends State implements Statemethods {
 			xLvlOffset = 0;
 	}
 
+	/**
+	 * Draws the components of the playing state.
+	 * Draws the background, clouds, level, player, enemies, and objects.
+	 * Also draws overlays for pause, game over, and level completed screens if necessary.
+	 *
+	 * @param g The Graphics object to draw on.
+	 */
 	@Override
 	public void draw(Graphics g) {
 		g.drawImage(backgroundImg, 0, 0, Game.GAME_WIDTH, Game.GAME_HEIGHT, null);
@@ -159,6 +204,12 @@ public class Playing extends State implements Statemethods {
 		}
 	}
 
+	/**
+	 * Draws the clouds on the screen.
+	 * Draws big clouds and small clouds at appropriate positions.
+	 *
+	 * @param g The Graphics object to draw on.
+	 */
 	private void drawClouds(Graphics g) {
 		for (int i = 0; i < 3; i++)
 			g.drawImage(bigCloud, i * BIG_CLOUD_WIDTH - (int) (xLvlOffset * 0.3), (int) (204 * Game.SCALE), BIG_CLOUD_WIDTH, BIG_CLOUD_HEIGHT, null);
@@ -167,6 +218,11 @@ public class Playing extends State implements Statemethods {
 			g.drawImage(smallCloud, SMALL_CLOUD_WIDTH * 4 * i - (int) (xLvlOffset * 0.7), smallCloudsPos[i], SMALL_CLOUD_WIDTH, SMALL_CLOUD_HEIGHT, null);
 	}
 
+	/**
+	 * Resets all game-related variables and entities to their initial state.
+	 * Resets the game over, paused, level completed, and player dying flags.
+	 * Resets the player, enemy manager, and object manager.
+	 */
 	public void resetAll() {
 		gameOver = false;
 		paused = false;
@@ -177,26 +233,58 @@ public class Playing extends State implements Statemethods {
 		objectManager.resetAllObjects();
 	}
 
+	/**
+	 * Sets the game over flag to the specified value.
+	 *
+	 * @param gameOver The boolean value indicating whether the game is over.
+	 */
 	public void setGameOver(boolean gameOver) {
 		this.gameOver = gameOver;
 	}
 
+	/**
+	 * Checks for collision between the player's attack and objects in the game.
+	 *
+	 * @param attackBox The bounding box of the player's attack.
+	 */
 	public void checkObjectHit(Rectangle2D.Float attackBox) {
 		objectManager.checkObjectHit(attackBox);
 	}
 
+	/**
+	 * Checks for collision between the player's attack and enemies in the game.
+	 *
+	 * @param attackBox The bounding box of the player's attack.
+	 */
 	public void checkEnemyHit(Rectangle2D.Float attackBox) {
 		enemyManager.checkEnemyHit(attackBox);
 	}
 
+	/**
+	 * Checks if the player's hitbox touches a potion object in the game.
+	 *
+	 * @param hitbox The bounding box of the player's hitbox.
+	 */
 	public void checkPotionTouched(Rectangle2D.Float hitbox) {
 		objectManager.checkObjectTouched(hitbox);
 	}
 
+	/**
+	 * Checks if the player touches spikes in the game.
+	 *
+	 * @param p The Player object to check for spike collision.
+	 */
 	public void checkSpikesTouched(Player p) {
 		objectManager.checkSpikesTouched(p);
 	}
 
+	/**
+	 * Handles mouse click events.
+	 * If the game is not over and the left mouse button is clicked,
+	 * sets the player to initiate an attack.
+	 *
+	 * @param e The MouseEvent representing the mouse click event.
+	 */
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		if (!gameOver) {
@@ -205,6 +293,17 @@ public class Playing extends State implements Statemethods {
 		}
 	}
 
+	/**
+	 * Handles key press events.
+	 * If the game is over, forwards the key press event to the game over overlay for processing.
+	 * If the game is not over:
+	 * - Pressing 'A' sets the player to move left.
+	 * - Pressing 'D' sets the player to move right.
+	 * - Pressing 'Space' makes the player jump.
+	 * - Pressing 'Escape' toggles the pause state of the game.
+	 *
+	 * @param e The KeyEvent representing the key press event.
+	 */
 	@Override
 	public void keyPressed(KeyEvent e) {
 		if (gameOver) {
@@ -227,6 +326,11 @@ public class Playing extends State implements Statemethods {
 		}
 	}
 
+	/**
+	 * Handles key release events when the game is not over.
+	 *
+	 * @param e The KeyEvent representing the key release event.
+	 */
 	@Override
 	public void keyReleased(KeyEvent e) {
 		if (!gameOver) {
@@ -244,6 +348,11 @@ public class Playing extends State implements Statemethods {
 		}
 	}
 
+	/**
+	 * Handles mouse drag events when the game is not over.
+	 *
+	 * @param e The MouseEvent representing the mouse drag event.
+	 */
 	public void mouseDragged(MouseEvent e) {
 		if (!gameOver) {
 			if (paused)
@@ -263,6 +372,14 @@ public class Playing extends State implements Statemethods {
 		}
 	}
 
+	/**
+	 * Handles mouse press events.
+	 * If the game is not over, checks if the game is paused or if the level is completed,
+	 * and delegates the mouse press event accordingly.
+	 * If the game is over, delegates the mouse press event to the game over overlay.
+	 *
+	 * @param e The MouseEvent representing the mouse press event.
+	 */
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		if (!gameOver) {
@@ -275,6 +392,14 @@ public class Playing extends State implements Statemethods {
 		}
 	}
 
+	/**
+	 * Handles mouse move events.
+	 * If the game is not over, checks if the game is paused or if the level is completed,
+	 * and delegates the mouse move event accordingly.
+	 * If the game is over, delegates the mouse move event to the game over overlay.
+	 *
+	 * @param e The MouseEvent representing the mouse move event.
+	 */
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		if (!gameOver) {
@@ -286,39 +411,79 @@ public class Playing extends State implements Statemethods {
 			gameOverOverlay.mouseMoved(e);
 		}
 	}
-
+	/**
+	 * Sets the flag indicating whether the level is completed.
+	 *
+	 * @param levelCompleted True if the level is completed, false otherwise.
+	 */
 	public void setLevelCompleted(boolean levelCompleted) {
 		this.lvlCompleted = levelCompleted;
 	}
 
+	/**
+	 * Sets the maximum level offset.
+	 *
+	 * @param lvlOffset The maximum level offset.
+	 */
 	public void setMaxLvlOffset(int lvlOffset) {
 		this.maxLvlOffsetX = lvlOffset;
 	}
 
+	/**
+	 * Resumes the game by unpause.
+	 */
 	public void unpauseGame() {
 		paused = false;
 	}
 
+	/**
+	 * Handles the event when the window loses focus by resetting player direction booleans.
+	 */
 	public void windowFocusLost() {
 		player.resetDirBooleans();
 	}
 
+	/**
+	 * Gets the player object.
+	 *
+	 * @return The player object.
+	 */
 	public Player getPlayer() {
 		return player;
 	}
 
+	/**
+	 * Gets the enemy manager object.
+	 *
+	 * @return The enemy manager object.
+	 */
 	public EnemyManager getEnemyManager() {
 		return enemyManager;
 	}
 
+	/**
+	 * Gets the object manager object.
+	 *
+	 * @return The object manager object.
+	 */
 	public ObjectManager getObjectManager() {
 		return objectManager;
 	}
 
+	/**
+	 * Gets the level manager object.
+	 *
+	 * @return The level manager object.
+	 */
 	public LevelManager getLevelManager() {
 		return levelManager;
 	}
 
+	/**
+	 * Sets the flag indicating whether the player is dying.
+	 *
+	 * @param playerDying True if the player is dying, false otherwise.
+	 */
 	public void setPlayerDying(boolean playerDying) {
 		this.playerDying = playerDying;
 	}

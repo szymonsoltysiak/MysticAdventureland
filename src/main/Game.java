@@ -9,6 +9,9 @@ import gamestates.Playing;
 import ui.AudioOptions;
 import utilz.LoadSave;
 
+/**
+ * The main class responsible for managing the game loop and controlling game states.
+ */
 public class Game implements Runnable {
 
 	private GameWindow gameWindow;
@@ -30,6 +33,9 @@ public class Game implements Runnable {
 	public final static int GAME_WIDTH = TILES_SIZE * TILES_IN_WIDTH;
 	public final static int GAME_HEIGHT = TILES_SIZE * TILES_IN_HEIGHT;
 
+	/**
+	 * Initializes the game and its components.
+	 */
 	public Game() {
 		initClasses();
 
@@ -41,6 +47,9 @@ public class Game implements Runnable {
 		startGameLoop();
 	}
 
+	/**
+	 * Initializes the various classes required for the game.
+	 */
 	private void initClasses() {
 		audioOptions = new AudioOptions();
 		menu = new Menu(this);
@@ -48,11 +57,17 @@ public class Game implements Runnable {
 		gameOptions = new GameOptions(this);
 	}
 
+	/**
+	 * Starts the game loop by creating a new thread and starting it.
+	 */
 	private void startGameLoop() {
 		gameThread = new Thread(this);
 		gameThread.start();
 	}
 
+	/**
+	 * Updates the game state.
+	 */
 	public void update() {
 		switch (Gamestate.state) {
 		case MENU:
@@ -72,6 +87,11 @@ public class Game implements Runnable {
 		}
 	}
 
+	/**
+	 * Renders graphics to the game window.
+	 *
+	 * @param g The Graphics object to render graphics.
+	 */
 	public void render(Graphics g) {
 		switch (Gamestate.state) {
 		case MENU:
@@ -88,6 +108,9 @@ public class Game implements Runnable {
 		}
 	}
 
+	/**
+	 * The game loop where game updates and rendering occur.
+	 */
 	@Override
 	public void run() {
 
@@ -133,24 +156,48 @@ public class Game implements Runnable {
 
 	}
 
+	/**
+	 * Handles the event when the game window loses focus.
+	 */
 	public void windowFocusLost() {
 		if (Gamestate.state == Gamestate.PLAYING)
 			playing.getPlayer().resetDirBooleans();
 	}
 
+	/**
+	 * Retrieves the menu instance.
+	 *
+	 * @return The menu instance.
+	 */
 	public Menu getMenu() {
 		return menu;
 	}
 
+	/**
+	 * Retrieves the playing instance.
+	 *
+	 * @return The playing instance.
+	 */
 	public Playing getPlaying() {
 		return playing;
 	}
 
+	/**
+	 * Retrieves the game options instance.
+	 *
+	 * @return The game options instance.
+	 */
 	public GameOptions getGameOptions() {
 		return gameOptions;
 	}
 
+	/**
+	 * Retrieves the audio options instance.
+	 *
+	 * @return The audio options instance.
+	 */
 	public AudioOptions getAudioOptions() {
 		return audioOptions;
 	}
+
 }

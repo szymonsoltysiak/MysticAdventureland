@@ -6,10 +6,18 @@ import java.awt.event.KeyListener;
 import gamestates.Gamestate;
 import main.GamePanel;
 
+/**
+ * Handles keyboard inputs by implementing the KeyListener interface.
+ */
 public class KeyboardInputs implements KeyListener {
 
 	private GamePanel gamePanel;
 
+	/**
+	 * Constructs a KeyboardInputs object with the specified GamePanel.
+	 *
+	 * @param gamePanel The GamePanel object associated with this KeyboardInputs instance.
+	 */
 	public KeyboardInputs(GamePanel gamePanel) {
 		this.gamePanel = gamePanel;
 	}
@@ -19,6 +27,11 @@ public class KeyboardInputs implements KeyListener {
 		// TODO Auto-generated method stub
 	}
 
+	/**
+	 * Handles key release events based on the current game state.
+	 *
+	 * @param e The KeyEvent representing the key release event.
+	 */
 	@Override
 	public void keyReleased(KeyEvent e) {
 		switch (Gamestate.state) {
@@ -34,6 +47,11 @@ public class KeyboardInputs implements KeyListener {
 		}
 	}
 
+	/**
+	 * Handles key press events based on the current game state.
+	 *
+	 * @param e The KeyEvent representing the key press event.
+	 */
 	@Override
 	public void keyPressed(KeyEvent e) {
 		switch (Gamestate.state) {

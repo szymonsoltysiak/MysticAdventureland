@@ -7,14 +7,26 @@ import java.awt.event.MouseMotionListener;
 import gamestates.Gamestate;
 import main.GamePanel;
 
+/**
+ * Handles mouse input events including mouse clicks and mouse movements.
+ */
 public class MouseInputs implements MouseListener, MouseMotionListener {
-
 	private GamePanel gamePanel;
 
+	/**
+	 * Constructs a MouseInputs object with the specified GamePanel.
+	 *
+	 * @param gamePanel The GamePanel to associate with this MouseInputs object.
+	 */
 	public MouseInputs(GamePanel gamePanel) {
 		this.gamePanel = gamePanel;
 	}
 
+	/**
+	 * Invoked when a mouse button is pressed on the GamePanel and the mouse is dragged.
+	 *
+	 * @param e The MouseEvent representing the mouse dragged event.
+	 */
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		switch (Gamestate.state) {
@@ -31,6 +43,11 @@ public class MouseInputs implements MouseListener, MouseMotionListener {
 
 	}
 
+	/**
+	 * Invoked when the mouse cursor has been moved.
+	 *
+	 * @param e The MouseEvent representing the mouse moved event.
+	 */
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		switch (Gamestate.state) {
@@ -50,6 +67,11 @@ public class MouseInputs implements MouseListener, MouseMotionListener {
 
 	}
 
+	/**
+	 * Invoked when the mouse button has been clicked (pressed and released).
+	 *
+	 * @param e The MouseEvent representing the mouse click event.
+	 */
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		switch (Gamestate.state) {
@@ -63,6 +85,11 @@ public class MouseInputs implements MouseListener, MouseMotionListener {
 
 	}
 
+	/**
+	 * Invoked when a mouse button has been pressed.
+	 *
+	 * @param e The MouseEvent representing the mouse press event.
+	 */
 	@Override
 	public void mousePressed(MouseEvent e) {
 		switch (Gamestate.state) {
@@ -79,9 +106,13 @@ public class MouseInputs implements MouseListener, MouseMotionListener {
 			break;
 
 		}
-
 	}
 
+	/**
+	 * Invoked when a mouse button has been released.
+	 *
+	 * @param e The MouseEvent representing the mouse release event.
+	 */
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		switch (Gamestate.state) {

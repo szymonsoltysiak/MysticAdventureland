@@ -11,6 +11,10 @@ import java.util.Arrays;
 
 import javax.imageio.ImageIO;
 
+
+/**
+ * Utility class for loading and saving various resources such as sprite atlases and level images.
+ */
 public class LoadSave {
 
 	public static final String PLAYER_ATLAS = "player_sprites.png";
@@ -36,6 +40,12 @@ public class LoadSave {
 	public static final String DEATH_SCREEN = "death_screen.png";
 	public static final String OPTIONS_MENU = "options_background.png";
 
+	/**
+	 * Loads a sprite atlas image from the resources directory.
+	 *
+	 * @param fileName The name of the sprite atlas file.
+	 * @return The BufferedImage containing the loaded sprite atlas.
+	 */
 	public static BufferedImage GetSpriteAtlas(String fileName){
 		BufferedImage img = null;
 		try {
@@ -46,7 +56,13 @@ public class LoadSave {
 		return img;
 	}
 
-
+	/**
+	 * Retrieves all level images from the "lvls" directory in the resources folder.
+	 * The files are sorted numerically based on their names.
+	 *
+	 * @return An array of BufferedImages containing all the loaded level images.
+	 * @throws RuntimeException if the directory is not found or there is an I/O error.
+	 */
 	public static BufferedImage[] GetAllLevels() {
 		File dir = new File("res/lvls");
 		File[] files = dir.listFiles((d, name) -> name.endsWith(".png"));

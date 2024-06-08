@@ -2,11 +2,18 @@ package utilz;
 
 import main.Game;
 
+/**
+ * This class contains various constants used throughout the game.
+ * It's organized into nested classes to group related constants together.
+ */
 public class Constants {
 
+	/** Gravity constant for the game environment. */
 	public static final float GRAVITY = 0.04f * Game.SCALE;
+	/** Animation speed constant. */
 	public static final int ANI_SPEED = 25;
-	
+
+	/** Constants related to projectiles in the game. */
 	public static class Projectiles{
 		public static final int CANNON_BALL_DEFAULT_WIDTH = 15;
 		public static final int CANNON_BALL_DEFAULT_HEIGHT = 15;
@@ -16,6 +23,7 @@ public class Constants {
 		public static final float SPEED = 0.75f * Game.SCALE;
 	}
 
+	/** Constants related to various objects in the game environment. */
 	public static class ObjectConstants {
 
 		public static final int RED_POTION = 0;
@@ -49,6 +57,12 @@ public class Constants {
 		public static final int CANNON_WIDTH = (int) (CANNON_WIDTH_DEFAULT * Game.SCALE);
 		public static final int CANNON_HEIGHT = (int) (CANNON_HEIGHT_DEFAULT * Game.SCALE);
 
+		/**
+		 * Returns the number of sprite images associated with the specified object type.
+		 *
+		 * @param object_type The type of the object.
+		 * @return The number of sprite images for the given object type.
+		 */
 		public static int GetSpriteAmount(int object_type) {
 			switch (object_type) {
 			case RED_POTION, BLUE_POTION:
@@ -62,6 +76,7 @@ public class Constants {
 		}
 	}
 
+	/** Constants related to enemies in the game. */
 	public static class EnemyConstants {
 		public static final int CRABBY = 0;
 
@@ -80,8 +95,14 @@ public class Constants {
 		public static final int CRABBY_DRAWOFFSET_X = (int) (26 * Game.SCALE);
 		public static final int CRABBY_DRAWOFFSET_Y = (int) (9 * Game.SCALE);
 
+		/**
+		 * Returns the number of sprite images associated with the specified enemy type and state.
+		 *
+		 * @param enemy_type The type of the enemy.
+		 * @param enemy_state The state of the enemy.
+		 * @return The number of sprite images for the given enemy type and state.
+		 */
 		public static int GetSpriteAmount(int enemy_type, int enemy_state) {
-
 			switch (enemy_type) {
 			case CRABBY:
 				switch (enemy_state) {
@@ -97,11 +118,15 @@ public class Constants {
 					return 5;
 				}
 			}
-
 			return 0;
-
 		}
 
+		/**
+		 * Returns the maximum health of an enemy of the specified type.
+		 *
+		 * @param enemy_type The type of enemy.
+		 * @return The maximum health of the enemy.
+		 */
 		public static int GetMaxHealth(int enemy_type) {
 			switch (enemy_type) {
 			case CRABBY:
@@ -111,6 +136,12 @@ public class Constants {
 			}
 		}
 
+		/**
+		 * Returns the damage inflicted by an enemy of the specified type.
+		 *
+		 * @param enemy_type The type of enemy.
+		 * @return The damage inflicted by the enemy.
+		 */
 		public static int GetEnemyDmg(int enemy_type) {
 			switch (enemy_type) {
 			case CRABBY:
@@ -123,6 +154,7 @@ public class Constants {
 
 	}
 
+	/** Constants related to environmental elements in the game. */
 	public static class Environment {
 		public static final int BIG_CLOUD_WIDTH_DEFAULT = 448;
 		public static final int BIG_CLOUD_HEIGHT_DEFAULT = 101;
@@ -135,7 +167,9 @@ public class Constants {
 		public static final int SMALL_CLOUD_HEIGHT = (int) (SMALL_CLOUD_HEIGHT_DEFAULT * Game.SCALE);
 	}
 
+	/** Constants related to user interface elements in the game. */
 	public static class UI {
+		/** Constants related to buttons in the game UI. */
 		public static class Buttons {
 			public static final int B_WIDTH_DEFAULT = 140;
 			public static final int B_HEIGHT_DEFAULT = 56;
@@ -143,17 +177,20 @@ public class Constants {
 			public static final int B_HEIGHT = (int) (B_HEIGHT_DEFAULT * Game.SCALE);
 		}
 
+		/** Constants related to pause buttons in the game UI. */
 		public static class PauseButtons {
 			public static final int SOUND_SIZE_DEFAULT = 42;
 			public static final int SOUND_SIZE = (int) (SOUND_SIZE_DEFAULT * Game.SCALE);
 		}
 
+		/** Constants related to URM (user response mechanism) buttons in the game UI. */
 		public static class URMButtons {
 			public static final int URM_DEFAULT_SIZE = 56;
 			public static final int URM_SIZE = (int) (URM_DEFAULT_SIZE * Game.SCALE);
 
 		}
 
+		/** Constants related to volume control buttons in the game UI. */
 		public static class VolumeButtons {
 			public static final int VOLUME_DEFAULT_WIDTH = 28;
 			public static final int VOLUME_DEFAULT_HEIGHT = 44;
@@ -165,6 +202,7 @@ public class Constants {
 		}
 	}
 
+	/** Constant representing directions as numbers. */
 	public static class Directions {
 		public static final int LEFT = 0;
 		public static final int UP = 1;
@@ -172,6 +210,7 @@ public class Constants {
 		public static final int DOWN = 3;
 	}
 
+	/** Constants related to player actions and states in the game. */
 	public static class PlayerConstants {
 		public static final int IDLE = 0;
 		public static final int RUNNING = 1;
@@ -181,6 +220,12 @@ public class Constants {
 		public static final int HIT = 5;
 		public static final int DEAD = 6;
 
+		/**
+		 * Returns the number of sprite images corresponding to a player action.
+		 *
+		 * @param player_action The action of the player.
+		 * @return The number of sprite images for the specified action.
+		 */
 		public static int GetSpriteAmount(int player_action) {
 			switch (player_action) {
 			case DEAD:

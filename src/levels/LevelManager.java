@@ -8,6 +8,9 @@ import gamestates.Gamestate;
 import main.Game;
 import utilz.LoadSave;
 
+/**
+ * Manages the levels in the game.
+ */
 public class LevelManager {
 
 	private Game game;
@@ -15,6 +18,11 @@ public class LevelManager {
 	private ArrayList<Level> levels;
 	private int lvlIndex = 0;
 
+	/**
+	 * Constructs a LevelManager object.
+	 *
+	 * @param game The Game object associated with the level manager.
+	 */
 	public LevelManager(Game game) {
 		this.game = game;
 		importOutsideSprites();
@@ -22,6 +30,9 @@ public class LevelManager {
 		buildAllLevels();
 	}
 
+	/**
+	 * Loads the next level in the game.
+	 */
 	public void loadNextLevel() {
 		lvlIndex++;
 		if (lvlIndex >= levels.size()) {
@@ -37,12 +48,18 @@ public class LevelManager {
 		game.getPlaying().getObjectManager().loadObjects(newLevel);
 	}
 
+	/**
+	 * Builds all the levels by loading level data from images.
+	 */
 	private void buildAllLevels() {
 		BufferedImage[] allLevels = LoadSave.GetAllLevels();
 		for (BufferedImage img : allLevels)
 			levels.add(new Level(img));
 	}
 
+	/**
+	 * Imports the sprite atlas for levels and divides it into individual sprites.
+	 */
 	private void importOutsideSprites() {
 		BufferedImage img = LoadSave.GetSpriteAtlas(LoadSave.LEVEL_ATLAS);
 		levelSprite = new BufferedImage[48];
@@ -53,6 +70,12 @@ public class LevelManager {
 			}
 	}
 
+	/**
+	 * Draws the current level on the screen.
+	 *
+	 * @param g         The Graphics object to draw on.
+	 * @param lvlOffset The level offset in the x-direction.
+	 */
 	public void draw(Graphics g, int lvlOffset) {
 		for (int j = 0; j < Game.TILES_IN_HEIGHT; j++)
 			for (int i = 0; i < levels.get(lvlIndex).getLevelData()[0].length; i++) {
@@ -65,10 +88,20 @@ public class LevelManager {
 
 	}
 
+	/**
+	 * Gets the current level.
+	 *
+	 * @return The current level.
+	 */
 	public Level getCurrentLevel() {
 		return levels.get(lvlIndex);
 	}
 
+	/**
+	 * Gets the total number of levels.
+	 *
+	 * @return The total number of levels.
+	 */
 	public int getAmountOfLevels() {
 		return levels.size();
 	}
