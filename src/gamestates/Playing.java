@@ -7,9 +7,6 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import entities.EnemyManager;
 import entities.Player;
@@ -23,14 +20,20 @@ import utilz.LoadSave;
 import static utilz.Constants.Environment.*;
 
 /**
- * The playing state of the game.
- * This state represents the main gameplay loop where the player controls the character.
+ * The Playing class represents the state of the game where the player is actively playing.
+ * It handles the game logic, updates, and rendering during gameplay.
  */
 public class Playing extends State implements Statemethods {
+	private final Object lock = new Object();
+	private Thread playerThread;
+	private Thread enemyManagerThread;
+	private Thread objectManagerThread;
+
 	private Player player;
-	private LevelManager levelManager;
 	private EnemyManager enemyManager;
 	private ObjectManager objectManager;
+
+	private LevelManager levelManager;
 	private PauseOverlay pauseOverlay;
 	private GameOverOverlay gameOverOverlay;
 	private LevelCompletedOverlay levelCompletedOverlay;
@@ -49,21 +52,16 @@ public class Playing extends State implements Statemethods {
 	private boolean lvlCompleted;
 	private boolean playerDying;
 
-	private ExecutorService executorService;
-	private Future<?> playerFuture;
-	private Future<?> enemyManagerFuture;
-	private Future<?> objectManagerFuture;
-
 	/**
-	 * Constructor for the Playing state.
-	 * Initializes the necessary components for the gameplay.
+	 * Constructs a new Playing state.
 	 *
-	 * @param game The main Game instance.
+	 * @param game The Game instance.
 	 */
 	public Playing(Game game) {
 		super(game);
 		initClasses();
 
+		// Load assets
 		backgroundImg = LoadSave.GetSpriteAtlas(LoadSave.PLAYING_BG_IMG);
 		bigCloud = LoadSave.GetSpriteAtlas(LoadSave.BIG_CLOUDS);
 		smallCloud = LoadSave.GetSpriteAtlas(LoadSave.SMALL_CLOUDS);
@@ -74,13 +72,18 @@ public class Playing extends State implements Statemethods {
 		calcLvlOffset();
 		loadStartLevel();
 
-		executorService = Executors.newFixedThreadPool(3);
+		// Start threads
+		playerThread = new Thread(player);
+		enemyManagerThread = new Thread(enemyManager);
+		objectManagerThread = new Thread(objectManager);
+
+		playerThread.start();
+		enemyManagerThread.start();
+		objectManagerThread.start();
 	}
 
 	/**
-	 * Loads the next level.
-	 * Resets all game elements and loads the next level from the level manager.
-	 * Sets the player spawn point to the spawn point of the current level.
+	 * Loads the next level in the game.
 	 */
 	public void loadNextLevel() {
 		resetAll();
@@ -89,8 +92,7 @@ public class Playing extends State implements Statemethods {
 	}
 
 	/**
-	 * Loads the start level.
-	 * Loads enemies and objects for the current level from the level manager.
+	 * Loads the starting level.
 	 */
 	private void loadStartLevel() {
 		enemyManager.loadEnemies(levelManager.getCurrentLevel());
@@ -98,18 +100,14 @@ public class Playing extends State implements Statemethods {
 	}
 
 	/**
-	 * Calculates the level offset.
-	 * Retrieves the level offset from the current level and sets it as the maximum level offset.
+	 * Calculates the maximum level offset.
 	 */
 	private void calcLvlOffset() {
 		maxLvlOffsetX = levelManager.getCurrentLevel().getLvlOffset();
 	}
 
 	/**
-	 * Initializes game classes.
-	 * Creates instances of the level manager, enemy manager, and object manager.
-	 * Creates a player instance and initializes it with the current level data and spawn point.
-	 * Creates instances of the pause overlay, game over overlay, and level completed overlay.
+	 * Initializes the game classes.
 	 */
 	private void initClasses() {
 		levelManager = new LevelManager(game);
@@ -126,41 +124,38 @@ public class Playing extends State implements Statemethods {
 	}
 
 	/**
-	 * Updates the playing state.
-	 * Checks if the game is paused, if the level is completed, if the game is over, if the player is dying, or if the game is running normally.
-	 * Executes the appropriate update actions accordingly.
+	 * Updates the game state.
 	 */
-	@Override
 	public void update() {
 		if (paused) {
-			pauseOverlay.update();
+			synchronized (lock) {
+				pauseOverlay.update();
+			}
 		} else if (lvlCompleted) {
-			levelCompletedOverlay.update();
+			synchronized (lock) {
+				levelCompletedOverlay.update();
+			}
 		} else if (gameOver) {
-			gameOverOverlay.update();
+			synchronized (lock) {
+				gameOverOverlay.update();
+			}
 		} else if (playerDying) {
-			player.update();
+			synchronized (lock) {
+				player.update();
+			}
 		} else {
-			levelManager.update();
-			checkCloseToBorder();
-
-			if (playerFuture == null || playerFuture.isDone()) {
-				playerFuture = executorService.submit(player::update);
-			}
-
-			if (enemyManagerFuture == null || enemyManagerFuture.isDone()) {
-				enemyManagerFuture = executorService.submit(() -> enemyManager.update(levelManager.getCurrentLevel().getLevelData(), player));
-			}
-
-			if (objectManagerFuture == null || objectManagerFuture.isDone()) {
-				objectManagerFuture = executorService.submit(() -> objectManager.update(levelManager.getCurrentLevel().getLevelData(), player));
+			synchronized (lock) {
+				levelManager.update();
+				objectManager.update(levelManager.getCurrentLevel().getLevelData(), player);
+				player.update();
+				enemyManager.update(levelManager.getCurrentLevel().getLevelData(), player);
+				checkCloseToBorder();
 			}
 		}
 	}
 
 	/**
-	 * Checks if the player is close to the level borders and adjusts the level offset accordingly.
-	 * This method ensures that the player remains centered within the playable area.
+	 * Checks if the player is close to the level border and updates the level offset accordingly.
 	 */
 	private void checkCloseToBorder() {
 		int playerX = (int) player.getHitbox().x;
@@ -178,11 +173,13 @@ public class Playing extends State implements Statemethods {
 	}
 
 	/**
-	 * Draws the components of the playing state.
-	 * Draws the background, clouds, level, player, enemies, and objects.
-	 * Also draws overlays for pause, game over, and level completed screens if necessary.
+	 * Renders the game graphics.
+	 * Draws the background image, clouds, player, enemies, and objects.
+	 * If the game is paused, it draws a semi-transparent overlay and the pause menu.
+	 * If the game is over, it draws the game over overlay.
+	 * If the level is completed, it draws the level completed overlay.
 	 *
-	 * @param g The Graphics object to draw on.
+	 * @param g The Graphics object used for rendering.
 	 */
 	@Override
 	public void draw(Graphics g) {
@@ -205,23 +202,22 @@ public class Playing extends State implements Statemethods {
 	}
 
 	/**
-	 * Draws the clouds on the screen.
-	 * Draws big clouds and small clouds at appropriate positions.
+	 * Draws the clouds in the game background.
 	 *
-	 * @param g The Graphics object to draw on.
+	 * @param g The Graphics object.
 	 */
 	private void drawClouds(Graphics g) {
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < 3; i++) {
 			g.drawImage(bigCloud, i * BIG_CLOUD_WIDTH - (int) (xLvlOffset * 0.3), (int) (204 * Game.SCALE), BIG_CLOUD_WIDTH, BIG_CLOUD_HEIGHT, null);
+		}
 
-		for (int i = 0; i < smallCloudsPos.length; i++)
+		for (int i = 0; i < smallCloudsPos.length; i++) {
 			g.drawImage(smallCloud, SMALL_CLOUD_WIDTH * 4 * i - (int) (xLvlOffset * 0.7), smallCloudsPos[i], SMALL_CLOUD_WIDTH, SMALL_CLOUD_HEIGHT, null);
+		}
 	}
 
 	/**
-	 * Resets all game-related variables and entities to their initial state.
-	 * Resets the game over, paused, level completed, and player dying flags.
-	 * Resets the player, enemy manager, and object manager.
+	 * Resets all game states and entities.
 	 */
 	public void resetAll() {
 		gameOver = false;
@@ -234,75 +230,72 @@ public class Playing extends State implements Statemethods {
 	}
 
 	/**
-	 * Sets the game over flag to the specified value.
+	 * Sets the game over state.
 	 *
-	 * @param gameOver The boolean value indicating whether the game is over.
+	 * @param gameOver True if the game is over, false otherwise.
 	 */
 	public void setGameOver(boolean gameOver) {
 		this.gameOver = gameOver;
 	}
 
 	/**
-	 * Checks for collision between the player's attack and objects in the game.
+	 * Checks if an object has been hit by the player's attack.
 	 *
-	 * @param attackBox The bounding box of the player's attack.
+	 * @param attackBox The attack box of the player.
 	 */
 	public void checkObjectHit(Rectangle2D.Float attackBox) {
 		objectManager.checkObjectHit(attackBox);
 	}
 
 	/**
-	 * Checks for collision between the player's attack and enemies in the game.
+	 * Checks if an enemy has been hit by the player's attack.
 	 *
-	 * @param attackBox The bounding box of the player's attack.
+	 * @param attackBox The attack box of the player.
 	 */
 	public void checkEnemyHit(Rectangle2D.Float attackBox) {
 		enemyManager.checkEnemyHit(attackBox);
 	}
 
 	/**
-	 * Checks if the player's hitbox touches a potion object in the game.
+	 * Checks if a potion has been touched by the player.
 	 *
-	 * @param hitbox The bounding box of the player's hitbox.
+	 * @param hitbox The hitbox of the player.
 	 */
 	public void checkPotionTouched(Rectangle2D.Float hitbox) {
 		objectManager.checkObjectTouched(hitbox);
 	}
 
 	/**
-	 * Checks if the player touches spikes in the game.
+	 * Checks if the player has touched spikes.
 	 *
-	 * @param p The Player object to check for spike collision.
+	 * @param p The player instance.
 	 */
 	public void checkSpikesTouched(Player p) {
 		objectManager.checkSpikesTouched(p);
 	}
 
 	/**
-	 * Handles mouse click events.
+	 * Handles mouse clicked events.
 	 * If the game is not over and the left mouse button is clicked,
-	 * sets the player to initiate an attack.
+	 * it sets the player to attacking state.
 	 *
-	 * @param e The MouseEvent representing the mouse click event.
+	 * @param e The MouseEvent object representing the mouse click event.
 	 */
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		if (!gameOver) {
-			if (e.getButton() == MouseEvent.BUTTON1)
+			if (e.getButton() == MouseEvent.BUTTON1) {
 				player.setAttacking(true);
+			}
 		}
 	}
 
 	/**
-	 * Handles key press events.
-	 * If the game is over, forwards the key press event to the game over overlay for processing.
-	 * If the game is not over:
-	 * - Pressing 'A' sets the player to move left.
-	 * - Pressing 'D' sets the player to move right.
-	 * - Pressing 'Space' makes the player jump.
-	 * - Pressing 'Escape' toggles the pause state of the game.
+	 * Handles key pressed events.
+	 * If the game is over, it forwards the event to the game over overlay.
+	 * Otherwise, it checks which key was pressed and updates the player's state or toggles pause mode accordingly.
 	 *
-	 * @param e The KeyEvent representing the key press event.
+	 * @param e The KeyEvent object representing the key press event.
 	 */
 	@Override
 	public void keyPressed(KeyEvent e) {
@@ -319,6 +312,9 @@ public class Playing extends State implements Statemethods {
 				case KeyEvent.VK_SPACE:
 					player.setJump(true);
 					break;
+				case KeyEvent.VK_K:
+					player.setAttacking(true);
+					break;
 				case KeyEvent.VK_ESCAPE:
 					paused = !paused;
 					break;
@@ -327,9 +323,10 @@ public class Playing extends State implements Statemethods {
 	}
 
 	/**
-	 * Handles key release events when the game is not over.
+	 * Handles key released events.
+	 * If the game is not over, it checks which key was released and updates the player's state accordingly.
 	 *
-	 * @param e The KeyEvent representing the key release event.
+	 * @param e The KeyEvent object representing the key release event.
 	 */
 	@Override
 	public void keyReleased(KeyEvent e) {
@@ -349,70 +346,83 @@ public class Playing extends State implements Statemethods {
 	}
 
 	/**
-	 * Handles mouse drag events when the game is not over.
+	 * Handles mouse drag events.
 	 *
-	 * @param e The MouseEvent representing the mouse drag event.
+	 * @param e The MouseEvent object.
 	 */
 	public void mouseDragged(MouseEvent e) {
 		if (!gameOver) {
-			if (paused)
+			if (paused) {
 				pauseOverlay.mouseDragged(e);
+			}
 		}
 	}
 
+	/**
+	 * Handles mouse pressed events.
+	 * If the game is not over, it checks if the game is paused or the level is completed,
+	 * and forwards the event to the corresponding overlay.
+	 * If the game is over, it forwards the event to the game over overlay.
+	 *
+	 * @param e The MouseEvent object representing the mouse press event.
+	 */
 	@Override
 	public void mousePressed(MouseEvent e) {
 		if (!gameOver) {
-			if (paused)
+			if (paused) {
 				pauseOverlay.mousePressed(e);
-			else if (lvlCompleted)
+			} else if (lvlCompleted) {
 				levelCompletedOverlay.mousePressed(e);
+			}
 		} else {
 			gameOverOverlay.mousePressed(e);
 		}
 	}
 
 	/**
-	 * Handles mouse press events.
-	 * If the game is not over, checks if the game is paused or if the level is completed,
-	 * and delegates the mouse press event accordingly.
-	 * If the game is over, delegates the mouse press event to the game over overlay.
+	 * Handles mouse released events.
+	 * If the game is not over, it checks if the game is paused or the level is completed,
+	 * and forwards the event to the corresponding overlay.
+	 * If the game is over, it forwards the event to the game over overlay.
 	 *
-	 * @param e The MouseEvent representing the mouse press event.
+	 * @param e The MouseEvent object representing the mouse release event.
 	 */
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		if (!gameOver) {
-			if (paused)
+			if (paused) {
 				pauseOverlay.mouseReleased(e);
-			else if (lvlCompleted)
+			} else if (lvlCompleted) {
 				levelCompletedOverlay.mouseReleased(e);
+			}
 		} else {
 			gameOverOverlay.mouseReleased(e);
 		}
 	}
 
 	/**
-	 * Handles mouse move events.
-	 * If the game is not over, checks if the game is paused or if the level is completed,
-	 * and delegates the mouse move event accordingly.
-	 * If the game is over, delegates the mouse move event to the game over overlay.
+	 * Handles mouse moved events.
+	 * If the game is not over, it checks if the game is paused or the level is completed,
+	 * and forwards the event to the corresponding overlay.
+	 * If the game is over, it forwards the event to the game over overlay.
 	 *
-	 * @param e The MouseEvent representing the mouse move event.
+	 * @param e The MouseEvent object representing the mouse movement event.
 	 */
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		if (!gameOver) {
-			if (paused)
+			if (paused) {
 				pauseOverlay.mouseMoved(e);
-			else if (lvlCompleted)
+			} else if (lvlCompleted) {
 				levelCompletedOverlay.mouseMoved(e);
+			}
 		} else {
 			gameOverOverlay.mouseMoved(e);
 		}
 	}
+
 	/**
-	 * Sets the flag indicating whether the level is completed.
+	 * Sets the level completed state.
 	 *
 	 * @param levelCompleted True if the level is completed, false otherwise.
 	 */
@@ -430,61 +440,67 @@ public class Playing extends State implements Statemethods {
 	}
 
 	/**
-	 * Resumes the game by unpause.
+	 * Unpauses the game.
 	 */
 	public void unpauseGame() {
 		paused = false;
 	}
 
 	/**
-	 * Handles the event when the window loses focus by resetting player direction booleans.
+	 * Resets the player's direction booleans when the window focus is lost.
 	 */
 	public void windowFocusLost() {
 		player.resetDirBooleans();
 	}
 
 	/**
-	 * Gets the player object.
+	 * Returns the player instance.
 	 *
-	 * @return The player object.
+	 * @return The player instance.
 	 */
 	public Player getPlayer() {
 		return player;
 	}
 
 	/**
-	 * Gets the enemy manager object.
+	 * Returns the enemy manager instance.
 	 *
-	 * @return The enemy manager object.
+	 * @return The enemy manager instance.
 	 */
 	public EnemyManager getEnemyManager() {
 		return enemyManager;
 	}
 
 	/**
-	 * Gets the object manager object.
+	 * Returns the object manager instance.
 	 *
-	 * @return The object manager object.
+	 * @return The object manager instance.
 	 */
 	public ObjectManager getObjectManager() {
 		return objectManager;
 	}
 
 	/**
-	 * Gets the level manager object.
-	 *
-	 * @return The level manager object.
-	 */
-	public LevelManager getLevelManager() {
-		return levelManager;
-	}
-
-	/**
-	 * Sets the flag indicating whether the player is dying.
+	 * Sets the player dying state.
 	 *
 	 * @param playerDying True if the player is dying, false otherwise.
 	 */
 	public void setPlayerDying(boolean playerDying) {
 		this.playerDying = playerDying;
+	}
+
+	/**
+	 * Stops all running threads.
+	 */
+	public void stopThreads() {
+		if (playerThread != null && playerThread.isAlive()) {
+			playerThread.interrupt();
+		}
+		if (enemyManagerThread != null && enemyManagerThread.isAlive()) {
+			enemyManagerThread.interrupt();
+		}
+		if (objectManagerThread != null && objectManagerThread.isAlive()) {
+			objectManagerThread.interrupt();
+		}
 	}
 }

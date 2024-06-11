@@ -15,7 +15,6 @@ import main.Game;
  * It defines the behavior, attributes, and interactions of the Crabby enemy.
  */
 public class Crabby extends Enemy {
-
 	private int attackBoxOffsetX;
 
 	/**

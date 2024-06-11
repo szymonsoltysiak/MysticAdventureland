@@ -15,6 +15,7 @@ import main.Game;
  * It defines common behavior, attributes, and interactions for all enemies.
  */
 public abstract class Enemy extends Entity {
+	protected boolean running;
 	protected int enemyType;
 	protected boolean firstUpdate = true;
 	protected int walkDir = LEFT;
