@@ -110,7 +110,7 @@ public class ObjectManager implements Runnable{
 	/**
 	 * Checks if the player touches any active potions and applies their effects to the player.
 	 *
-	 * @param hitbox The hitbox representing the area where the player touches an object.
+	 * @param attackbox The attackbox representing the area where the player touches an object.
 	 */
 	public void checkObjectHit(Rectangle2D.Float attackbox) {
 		for (GameContainer gc : containers)
