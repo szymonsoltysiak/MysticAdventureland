@@ -481,6 +481,15 @@ public class Playing extends State implements Statemethods {
 	}
 
 	/**
+	 * Returns the level manager instance.
+	 *
+	 * @return The level manager instance.
+	 */
+	public LevelManager getLevelManager() {
+		return levelManager;
+	}
+
+	/**
 	 * Sets the player dying state.
 	 *
 	 * @param playerDying True if the player is dying, false otherwise.
